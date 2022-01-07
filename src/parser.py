@@ -7,16 +7,22 @@ import argparse
 
 import elf.elffile as elffile
 
+VERSION = '0.0.1'
+
 
 def create_args_parser() -> argparse.ArgumentParser:
     """Create parser for command line"""
 
-    parser = argparse.ArgumentParser(description='Program generating code representation from elf file in python')
+    parser = argparse.ArgumentParser(description='Program generating code representation from elf file in python',
+                                     exit_on_error=False)
 
     parser.add_argument('elffile',
                         type=pathlib.Path,
                         help='Elffile with dwarf debug information',
                         action='store')
+    parser.add_argument('--version',
+                        action='version',
+                        version='%(prog)s ' + VERSION)
     parser.add_argument('-d',
                         '--dst',
                         type=pathlib.Path,
@@ -26,11 +32,18 @@ def create_args_parser() -> argparse.ArgumentParser:
     return parser
 
 
-if __name__ == '__main__':
+def parse_args(args: list[str]) -> argparse.Namespace:
+    """Parse given arguements"""
+    return create_args_parser().parse_args(args)
 
+
+def main():
     """Parse arguments"""
-    arg_parser = create_args_parser()
-    args = arg_parser.parse_args(sys.argv[1:])
+    try:
+        args = parse_args(sys.argv[1:])
+    except argparse.ArgumentError as error:
+        logging.error(error.message)
+        return os.EX_USAGE
 
     """Load and parse elf file"""
     error_prefix = 'Error while parsing elf file'
@@ -40,10 +53,14 @@ if __name__ == '__main__':
 
     except OSError as error:
         logging.error(f' {error_prefix}: {error.filename} - {error.strerror}')
-        sys.exit(error.errno)
+        return error.errno
 
     except Exception as error:
         logging.exception(f' {error_prefix}')
-        sys.exit(os.EX_SOFTWARE)
+        return os.EX_SOFTWARE
 
-    exit(os.EX_OK)
+    return os.EX_OK
+
+
+if __name__ == '__main__':
+    sys.exit(main())
