@@ -5,7 +5,7 @@ import pathlib
 import logging
 import argparse
 
-import elf.elffile as elffile
+import elf.elfdata as elfdata
 
 VERSION = '0.0.1'
 
@@ -56,7 +56,9 @@ def init_logging(filename: pathlib.Path, verbosity: int) -> None:
     logging.info(f'Verbosity level: {verbosity}')
 
 
-def main():
+def main() -> int:
+    """Main program procedure"""
+
     # Parse arguments
     try:
         args = parse_args(sys.argv[1:])
@@ -75,8 +77,7 @@ def main():
     # Load and parse elf file
     error_prefix = 'Error while parsing elf file'
     try:
-        with open(args.elffile, 'rb') as file:
-            efile = elffile.load_elffile(file)
+        efile = elfdata.ELFData(args.elffile)
 
     except OSError as error:
         logging.error(f' {error_prefix}: {error.filename} - {error.strerror}')
