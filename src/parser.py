@@ -57,14 +57,14 @@ def init_logging(filename: pathlib.Path, verbosity: int) -> None:
 
 
 def main():
-    """Parse arguments"""
+    # Parse arguments
     try:
         args = parse_args(sys.argv[1:])
     except argparse.ArgumentError as error:
         logging.error(error.message)
         return os.EX_USAGE
 
-    """Initialize logging module"""
+    # Initialize logging module
     try:
         init_logging(args.log, args.verbose)
 
@@ -72,7 +72,7 @@ def main():
         logging.error(f' Error while trying to open logging file {error.filename} - {error.strerror}')
         return error.errno
 
-    """Load and parse elf file"""
+    # Load and parse elf file
     error_prefix = 'Error while parsing elf file'
     try:
         with open(args.elffile, 'rb') as file:
