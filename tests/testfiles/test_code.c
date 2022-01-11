@@ -7,6 +7,11 @@ typedef struct TestStruct_tag
     void *c;
 } TestStruct_t;
 
+enum Values {
+    VAL_FIRST = 0,
+    VAL_SECOND = 3
+};
+
 TestStruct_t structs[3] = {
     (TestStruct_t){.a = 1, .b = 'a', .c = 0},
     (TestStruct_t){.a = 2, .b = 'b', .c = 0},
@@ -21,6 +26,7 @@ char test_function(size_t elem)
 int main(int argc, char *argv[])
 {
     printf("%c\n", test_function(1));
+    printf("%d\n", VAL_FIRST);
 
     return 0;
 }
