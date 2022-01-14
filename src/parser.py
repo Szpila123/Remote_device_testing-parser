@@ -78,6 +78,7 @@ def main() -> int:
     error_prefix = 'Error while parsing elf file'
     try:
         efile = elfdata.ELFData(args.elffile)
+        program_files = efile.parse_elffile()
 
     except OSError as error:
         logging.error(f' {error_prefix}: {error.filename} - {error.strerror}')

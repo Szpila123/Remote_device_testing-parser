@@ -2,33 +2,20 @@ import io
 import logging
 import itertools
 from typing import Optional
+from elftools.dwarf.die import DIE
 
 import elftools.elf.elffile as elffile
-from elftools.elf.sections import Symbol, SymbolTableSection
 from elftools.dwarf.compileunit import CompileUnit
 
-from common.exceptions import ParserException, WrongArgumentValueError
-from elf.constants import section_map_type
+from common.exceptions import WrongArgumentValueError
+from elf.exceptions import MissingDwarfInfoError
+from elf.utils import get_die_type, read_ELF_symbol_section
+
 
 from program.program_file import ProgramFile
 from program.program_type import ProgramType
 from program.program_function import ProgramFunction
 from program.program_variable import ProgramVariable
-
-
-class MissingDwarfInfoError(ParserException):
-    """Exception for missing dwarf comments in elf file"""
-    pass
-
-
-class MissingSymbolTableError(ParserException):
-    """Exception for missing symbol table section in elf file"""
-    pass
-
-
-class FilenameNotFoundError(ParserException):
-    """Exception for missing symbol table section in elf file"""
-    pass
 
 
 class ELFData(object):
@@ -54,7 +41,7 @@ class ELFData(object):
         # Extract needed information
         self._dwarfinfo = elf_file.get_dwarf_info()
         self._cus = list(self._dwarfinfo.iter_CUs())
-        self._symbols = _read_symbols(elf_file)
+        self._symbols = read_ELF_symbol_section(elf_file)
 
         # Release file cached in memory
         file_image.close()
@@ -68,56 +55,53 @@ class ELFData(object):
             file_name = str(cu.get_top_DIE().attributes['DW_AT_name'].value, 'utf8')
             self._files[file_name] = cu
 
-        self.get_files_data()
-
     @property
     def file_names(self) -> list[str]:
-        """Get list of all file names that were used during compilation of program"""
+        """List of all file names that were used during compilation of a program."""
         return self._files.keys()
 
-    def get_files_data(self) -> list[ProgramFile]:
-        """Eject information about separate files from elf data"""
+    def parse_elffile(self) -> list[ProgramFile]:
+        """Eject information about separate files from elf data."""
+        parsed_files = []
         for file_name, cu in self._files.items():
             if cu is None:
                 continue
-            file_types = self.get_types(file_name)
-            file_variables = self.get_variables(file_name)
-            file_funcitons = self.get_functions(file_name)
 
-    def get_types(self, file_name: str) -> list[ProgramType]:
-        """Get all types defined in a given file"""
-        if not self._file_has_cu(file_name):
-            return []
+            # Sort die's by object which they represent
+            cu_objects = self._get_cu_objects(cu)
 
-        top_die = self._files[file_name].get_top_DIE()
+            # Create coresponding object representations
+            file_types = self._create_types(cu_objects[ProgramType])
+            file_variables = self._create_variables(cu_objects[ProgramVariable])
+            file_functions = self._create_functions(cu_objects[ProgramFunction])
 
-    def get_variables(self, file_name: str) -> list[ProgramVariable]:
-        """Get all variables defined in a given file"""
-        if not self._file_has_cu(file_name):
-            return []
+            # Create representations of object file/cu
+            parsed_files.append(ProgramFile(file_types, file_variables, file_functions))
 
-        top_die = self._files[file_name].get_top_DIE()
+        return parsed_files
 
-    def get_functions(self, file_name: str) -> list[ProgramFunction]:
-        """Get all functions defined in a given file"""
-        if not self._file_has_cu(file_name):
-            return []
+    def _create_types(self, type_dies: list[DIE]) -> list[ProgramType]:
+        """Get all types defined in a given file."""
+        pass
 
-        top_die = self._files[file_name].get_top_DIE()
+    def _create_variables(self, variable_dies: list[DIE]) -> list[ProgramVariable]:
+        """Get all variables defined in a given file."""
+        pass
 
-    def _file_has_cu(self, file_name: str) -> bool:
-        """Check if given file has it's cu"""
-        if file_name not in self._files:
-            raise WrongArgumentValueError('File name not found')
+    def _create_functions(self, function_dies: list[DIE]) -> list[ProgramFunction]:
+        """Get all functions defined in a given file."""
+        pass
 
-        return self._files[file_name] is not None
+    def _get_cu_objects(self, cu: CompileUnit) -> dict[str, list[DIE]]:
+        """Segregates die's in compilation unit by object which dies represent."""
+        objects = {ProgramFunction: [], ProgramVariable: [], ProgramType: []}
+        for die in cu.iter_DIEs():
+            if die.is_null():
+                continue
 
+            try:
+                objects[get_die_type(die)].append(die)
+            except KeyError:
+                logging.warning(f'DIE with offset {die.offset} does not have corresponding program object')
 
-def _read_symbols(elffile: elffile.ELFFile) -> list[Symbol]:
-    """Read all symbols from symbol table section of elffile"""
-
-    symbol_table: SymbolTableSection = elffile.get_section_by_name(section_map_type['SHT_SYMTAB'])
-    if not symbol_table:
-        raise MissingSymbolTableError(f'Elffile is missing symbol table section')
-
-    return list(symbol_table.iter_symbols())
+        return objects
