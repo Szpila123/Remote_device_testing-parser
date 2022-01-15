@@ -49,10 +49,17 @@ char (*my_pointer)(int, char) = static_function;
 int main(int argc, char *argv[])
 {
     union Unity a = {.function_ptr = my_pointer};
+    struct BitFields bf;
 
     printf("%c\n", test_function(1));
     printf("%d\n", VAL_FIRST);
     printf("%d\n", a.function_ptr(3, 'a'));
+
+    bf.bitf1 = 0b0;
+    bf.bitf2 = 0b10;
+    bf.bitf3 = 0b101;
+    bf.bitf4 = 0b01;
+    printf("%d\n", *((int*) &bf));
 
     return 0;
 }

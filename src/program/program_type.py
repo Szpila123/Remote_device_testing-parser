@@ -14,22 +14,6 @@ from elftools.dwarf.die import DIE
 
 class ProgramType(ProgramABC):
     """Class represent types of the program"""
-    die: DIE
-    offset: int
-
-    def __init__(self, die: DIE) -> None:
-        self.die = die
-        self.offset = die.offset
-
-    def __str__(self) -> str:
-        return f'Offset: {self.offset}\n\t'
-
-    def get_die_attribute(self, attr: str) -> Any:
-        """Check object's DIE for given attribute, return None if missing"""
-        try:
-            return self.die.attributes[attr].value
-        except KeyError:
-            return None
 
     @classmethod
     def create(cls, die: DIE) -> Optional['ProgramType']:
@@ -50,18 +34,18 @@ class ProgramType(ProgramABC):
             case _:
                 raise WrongDIEType(f'Creating ProgramType subclass instance with die of tag {die.tag}')
 
-    # TODO: uncomment when ready
-    # @abstractmethod
-    # def to_code(self) -> str: ...
-
 
 class ProgramTypeCollection(ProgramType):
     """Class represents all collection datatypes"""
-    Member = namedtuple('Member', ['name', 'reference', 'offset'])
+    Member = namedtuple('Member', ['name', 'reference', 'offset', 'bitfield'])
+    BitField = namedtuple('Bitfield', ['bitsize', 'bitoffset'])
+
+    name: str
 
     def __init__(self, die: DIE) -> None:
         super().__init__(die)
-        self.members_refs = self.parse_members()
+        self.name = self.get_die_attribute('DW_AT_name')
+        self.members_refs = self._parse_members()
 
     @classmethod
     def create(cle, die: DIE) -> 'ProgramTypeCollection':
@@ -73,22 +57,28 @@ class ProgramTypeCollection(ProgramType):
             case _:
                 raise WrongDIEType(f'Creating ProgramTypeCollection subclass instance with die of tag {die.tag}')
 
-    def parse_members(self) -> dict[str, Member]:
+    def _parse_members(self) -> dict[str, Member]:
         """Get all structure members, their type references and offsets"""
         members = {}
         for child in self.die.iter_children():
 
             if child.tag != 'DW_TAG_member':
-                raise UnexpectedChildError(f'Struct {self.name} has child of type {child.tag}')
+                raise UnexpectedChildError(f'Collection {self.name} has child of type {child.tag}')
 
             name = child.attributes['DW_AT_name'].value
             reference = child.attributes['DW_AT_type'].value
-            offset = 0
 
+            offset = 0
             if 'DW_AT_data_member_location' in child.attributes:
                 offset = child.attributes['DW_AT_data_member_location'].value
 
-            members[name] = self.Member(name, reference, offset)
+            bitfield = None
+            if 'DW_AT_bit_size' in child.attributes:
+                bitsize = child.attributes['DW_AT_bit_size'].value
+                bitoffset = child.attributes['DW_AT_bit_offset'].value
+                bitfield = self.BitField(bitsize, bitoffset)
+
+            members[name] = self.Member(name, reference, offset, bitfield)
 
         return members
 
@@ -194,7 +184,7 @@ class ProgramTypeEnum(ProgramType):
 
     def __str__(self) -> str:
         description = super().__str__()
-        description += f'ProgramTypeEnum'
+        description += f'ProgramTypeEnum {self.name}'
         description += self._get_enumerators_str()
         return description
 
@@ -204,7 +194,6 @@ class ProgramTypeEnum(ProgramType):
         for child in self.die.iter_children():
             if child.tag != 'DW_TAG_enumerator':
                 raise UnexpectedChildError(f'Enumerators {self.name} has child of type {child.tag}')
-            print(child)
 
             name = child.attributes['DW_AT_name'].value
             value = child.attributes['DW_AT_const_value'].value
@@ -224,12 +213,9 @@ class ProgramTypeEnum(ProgramType):
 class ProgramTypeUnion(ProgramTypeCollection):
     """Instances of this class are union types"""
 
-    def __init__(self, die: DIE) -> None:
-        super().__init__(die)
-
     def __str__(self) -> str:
         description = super().__str__()
-        description += f'ProgramTypeUnion'
+        description += f'ProgramTypeUnion {self.name}'
         description += self._get_members_str()
         return description
 
@@ -249,10 +235,6 @@ class ProgramTypeTypedef(ProgramType):
 
 class ProgramTypeStructure(ProgramTypeCollection):
     """Instances of this class are structure types"""
-
-    def __init__(self, die: DIE) -> None:
-        super().__init__(die)
-        self.name = self.get_die_attribute('DW_AT_name')
 
     def __str__(self) -> str:
         description = super().__str__()
