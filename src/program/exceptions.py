@@ -15,3 +15,8 @@ class UnexpectedChildError(ParserException):
 class LocalVariableError(ParserException):
     """Error raised when DIE represents non-external variable"""
     pass
+
+
+class IncorrectLocationEncodingError(ParserException):
+    """Location information has incorrect format"""
+    pass

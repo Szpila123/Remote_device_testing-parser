@@ -1,7 +1,8 @@
 from functools import reduce
 
 from elftools.dwarf.dwarf_expr import DW_OP_name2opcode
-from elf.exceptions import IncorrectLocationEncodingError
+
+from program.exceptions import IncorrectLocationEncodingError
 
 
 def eval_dwarf_location(location: list[int], endian_little: bool = True) -> int:
