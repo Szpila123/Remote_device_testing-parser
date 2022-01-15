@@ -9,10 +9,10 @@ typedef struct TestStruct_tag
 
 struct BitFields
 {
-    int a : 1;
-    int b : 2;
-    int c : 3;
-    int d : 2;
+    int bitf1 : 1;
+    int bitf2 : 2;
+    int bitf3 : 3;
+    int bitf4 : 2;
 };
 
 enum Values
@@ -24,7 +24,7 @@ enum Values
 union Unity
 {
     char (*function_ptr)(int, char);
-    int c;
+    int union_int;
 };
 
 TestStruct_t structs[3] = {

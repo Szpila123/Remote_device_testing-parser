@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Parser",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/parser.py",
+            "console": "integratedTerminal",
+            "args": ["${workspaceFolder}/tests/testfiles/test_code.elf", "-vvv"]
+        }
+    ]
+}

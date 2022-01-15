@@ -1,0 +1,21 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Remake test files",
+            "type": "process",
+            "options": {"cwd": "${workspaceFolder}/tests/testfiles"},
+            "args": ["all"],
+            "command": "make",
+            "group": "build"
+        },
+        {
+            "label": "Run tests",
+            "type": "shell",
+            "options": {"cwd": "${workspaceFolder}"},
+            "command": "./tests/run_tests.py",
+            "problemMatcher": "$gcc",
+            "group": "test"
+        }
+    ]
+}

@@ -7,7 +7,6 @@ from elftools.dwarf.die import DIE
 import elftools.elf.elffile as elffile
 from elftools.dwarf.compileunit import CompileUnit
 
-from common.exceptions import WrongArgumentValueError
 from elf.exceptions import MissingDwarfInfoError
 from elf.utils import get_die_type, read_ELF_symbol_section
 
@@ -66,6 +65,7 @@ class ELFData(object):
         for file_name, cu in self._files.items():
             if cu is None:
                 continue
+            logging.debug(f'Parsing file {file_name}')
 
             # Sort die's by object which they represent
             cu_objects = self._get_cu_objects(cu)
@@ -75,6 +75,9 @@ class ELFData(object):
             file_variables = self._create_variables(cu_objects[ProgramVariable])
             file_functions = self._create_functions(cu_objects[ProgramFunction])
 
+            for object in itertools.chain(file_types, file_variables, file_functions):
+                logging.info(object)
+
             # Create representations of object file/cu
             parsed_files.append(ProgramFile(file_types, file_variables, file_functions))
 
@@ -82,15 +85,16 @@ class ELFData(object):
 
     def _create_types(self, type_dies: list[DIE]) -> list[ProgramType]:
         """Get all types defined in a given file."""
-        pass
+        types = list(filter(None, (ProgramType.create(die) for die in type_dies)))
+        return types
 
     def _create_variables(self, variable_dies: list[DIE]) -> list[ProgramVariable]:
         """Get all variables defined in a given file."""
-        pass
+        return []
 
     def _create_functions(self, function_dies: list[DIE]) -> list[ProgramFunction]:
         """Get all functions defined in a given file."""
-        pass
+        return []
 
     def _get_cu_objects(self, cu: CompileUnit) -> dict[str, list[DIE]]:
         """Segregates die's in compilation unit by object which dies represent."""
@@ -103,5 +107,6 @@ class ELFData(object):
                 objects[get_die_type(die)].append(die)
             except KeyError:
                 logging.warning(f'DIE with offset {die.offset} does not have corresponding program object')
+                logging.debug(f'DIE: {die}')
 
         return objects

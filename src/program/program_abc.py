@@ -1,6 +1,11 @@
-from abc import ABC
+from abc import ABC, abstractmethod, abstractstaticmethod
 
 
 class ProgramABC(ABC):
     """Abstract class for all Program objects classes"""
-    pass
+
+    @abstractmethod
+    def __init__() -> None: ...
+
+    @abstractmethod
+    def __str__(self) -> str: ...
