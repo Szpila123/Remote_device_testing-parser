@@ -2,12 +2,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Parser",
+            "name": "Parser single",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/src/parser.py",
             "console": "integratedTerminal",
             "args": ["${workspaceFolder}/tests/testfiles/test_code.elf", "-vv"]
+        },
+        {
+            "name": "Parser multi",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/parser.py",
+            "console": "integratedTerminal",
+            "args": ["${workspaceFolder}/tests/testfiles/test_code_multi.elf", "-vv"]
         }
     ]
 }

@@ -2,8 +2,8 @@ from collections import namedtuple
 
 from elftools.dwarf.die import DIE
 
-from program.exceptions import UnexpectedChildError
 from program.program_abc import ProgramABC
+from program.exceptions import UnexpectedChildError
 
 
 class ProgramFunction(ProgramABC):
@@ -19,7 +19,7 @@ class ProgramFunction(ProgramABC):
 
     def __str__(self) -> str:
         description = super().__str__()
-        description += f'ProgramFunction {self.name} ref {self.ref} addr {self.address:#x}'
+        description += f'ProgramFunction {self.name} ref {self.ref} addr {self.address}'
         description += self._get_args_str()
         return description
 
