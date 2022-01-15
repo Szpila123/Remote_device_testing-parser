@@ -18,7 +18,8 @@ struct BitFields
 enum Values
 {
     VAL_FIRST = 0,
-    VAL_SECOND = 3
+    VAL_SECOND = 3,
+    VAL_THIRD
 };
 
 union Unity

@@ -1,5 +1,7 @@
 from abc import abstractmethod
 from collections import namedtuple
+from decimal import DecimalException
+from enum import Enum
 from math import ceil
 from typing import Any, Optional
 from common.exceptions import WrongDIEType
@@ -90,7 +92,7 @@ class ProgramTypeCollection(ProgramType):
 
         return members
 
-    def _get_member_str(self) -> str:
+    def _get_members_str(self) -> str:
         """Retruns string descripting it's members"""
         description = ''
         for member in self.members_refs.values():
@@ -187,10 +189,36 @@ class ProgramTypeEnum(ProgramType):
 
     def __init__(self, die: DIE) -> None:
         super().__init__(die)
+        self.name = self.get_die_attribute('DW_AT_name')
+        self.enumerators = self._parse_enumerators()
 
     def __str__(self) -> str:
         description = super().__str__()
-        return description + f'ProgramTypeEnum'
+        description += f'ProgramTypeEnum'
+        description += self._get_enumerators_str()
+        return description
+
+    def _parse_enumerators(self) -> dict[str, Enumerator]:
+        """Get all structure members, their type references and offsets"""
+        enumerators = {}
+        for child in self.die.iter_children():
+            if child.tag != 'DW_TAG_enumerator':
+                raise UnexpectedChildError(f'Enumerators {self.name} has child of type {child.tag}')
+            print(child)
+
+            name = child.attributes['DW_AT_name'].value
+            value = child.attributes['DW_AT_const_value'].value
+
+            enumerators[name] = self.Enumerator(name, value)
+
+        return enumerators
+
+    def _get_enumerators_str(self) -> str:
+        """Retruns string descripting it's members"""
+        description = ''
+        for member in self.enumerators.values():
+            description += f'\n\t{member}'
+        return description
 
 
 class ProgramTypeUnion(ProgramTypeCollection):
@@ -202,7 +230,7 @@ class ProgramTypeUnion(ProgramTypeCollection):
     def __str__(self) -> str:
         description = super().__str__()
         description += f'ProgramTypeUnion'
-        description += self._get_member_str()
+        description += self._get_members_str()
         return description
 
 
@@ -229,7 +257,7 @@ class ProgramTypeStructure(ProgramTypeCollection):
     def __str__(self) -> str:
         description = super().__str__()
         description += f'ProgramTypeStructure {self.name}'
-        description += self._get_member_str()
+        description += self._get_members_str()
         return description
 
 
