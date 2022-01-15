@@ -7,7 +7,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/src/parser.py",
             "console": "integratedTerminal",
-            "args": ["${workspaceFolder}/tests/testfiles/test_code.elf", "-vvv"]
+            "args": ["${workspaceFolder}/tests/testfiles/test_code.elf", "-vv"]
         }
     ]
 }

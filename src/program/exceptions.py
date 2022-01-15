@@ -1,3 +1,4 @@
+from email.parser import Parser
 from common.exceptions import ParserException
 
 
@@ -8,4 +9,9 @@ class ModifierTypeWithNoReferenceError(ParserException):
 
 class UnexpectedChildError(ParserException):
     """Error raised when DIE has unknown child"""
+    pass
+
+
+class LocalVariableError(ParserException):
+    """Error raised when DIE represents non-external variable"""
     pass

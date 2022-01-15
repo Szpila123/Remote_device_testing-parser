@@ -16,6 +16,16 @@
             "command": "./tests/run_tests.py",
             "problemMatcher": "$gcc",
             "group": "test"
+        },
+        {
+            "label": "Run test code",
+            "type": "process",
+            "options": {"cwd": "${workspaceFolder}/tests/testfiles"},
+            "group": "none",
+            "args": ["x86_64", "-R", "./test_code.elf"],
+            "command": "setarch",
+            "echoCommand": true,
+            "problemMatcher": "$eslint-compact"
         }
     ]
 }

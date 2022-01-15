@@ -1,3 +1,4 @@
+from email.parser import Parser
 from common.exceptions import ParserException
 
 
@@ -13,4 +14,9 @@ class MissingSymbolTableError(ParserException):
 
 class FilenameNotFoundError(ParserException):
     """Exception for missing symbol table section in elf file"""
+    pass
+
+
+class IncorrectLocationEncodingError(ParserException):
+    """Location information has incorrect format"""
     pass

@@ -15,6 +15,7 @@ from program.program_file import ProgramFile
 from program.program_type import ProgramType
 from program.program_function import ProgramFunction
 from program.program_variable import ProgramVariable
+from program.exceptions import LocalVariableError
 
 
 class ELFData(object):
@@ -85,12 +86,18 @@ class ELFData(object):
 
     def _create_types(self, type_dies: list[DIE]) -> list[ProgramType]:
         """Get all types defined in a given file."""
-        types = list(filter(None, (ProgramType.create(die) for die in type_dies)))
-        return types
+        return list(filter(None, (ProgramType.create(die) for die in type_dies)))
 
     def _create_variables(self, variable_dies: list[DIE]) -> list[ProgramVariable]:
         """Get all variables defined in a given file."""
-        return []
+        variables = []
+        for var_die in variable_dies:
+            try:
+                variables.append(ProgramVariable(var_die))
+            except LocalVariableError:
+                pass
+
+        return variables
 
     def _create_functions(self, function_dies: list[DIE]) -> list[ProgramFunction]:
         """Get all functions defined in a given file."""
