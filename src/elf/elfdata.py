@@ -101,7 +101,10 @@ class ELFData(object):
 
     def _create_functions(self, function_dies: list[DIE]) -> list[ProgramFunction]:
         """Get all functions defined in a given file."""
-        return []
+        for die in function_dies:
+            print(die)
+        functions = list(ProgramFunction(die) for die in function_dies)
+        return functions
 
     def _get_cu_objects(self, cu: CompileUnit) -> dict[str, list[DIE]]:
         """Segregates die's in compilation unit by object which dies represent."""

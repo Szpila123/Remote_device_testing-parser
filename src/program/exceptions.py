@@ -1,4 +1,3 @@
-from email.parser import Parser
 from common.exceptions import ParserException
 
 

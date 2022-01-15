@@ -1,15 +1,15 @@
-from abc import abstractmethod
 from collections import namedtuple
-from decimal import DecimalException
-from enum import Enum
 from math import ceil
-from typing import Any, Optional
-from common.exceptions import WrongDIEType
-from elf.constants import BITS_IN_BYTE, DIE_TYPE_COLLECTION_TAGS, DIE_TYPE_MODIFIER_TAGS
-from program.exceptions import ModifierTypeWithNoReferenceError, UnexpectedChildError
-from program.program_abc import ProgramABC
+from typing import Optional
 
 from elftools.dwarf.die import DIE
+
+from common.exceptions import WrongDIEType
+
+from elf.constants import BITS_IN_BYTE, DIE_TYPE_COLLECTION_TAGS, DIE_TYPE_MODIFIER_TAGS
+
+from program.exceptions import ModifierTypeWithNoReferenceError, UnexpectedChildError
+from program.program_abc import ProgramABC
 
 
 class ProgramType(ProgramABC):
@@ -83,7 +83,7 @@ class ProgramTypeCollection(ProgramType):
         return members
 
     def _get_members_str(self) -> str:
-        """Retruns string descripting it's members"""
+        """Retruns string descripting collections's members"""
         description = ''
         for member in self.members_refs.values():
             description += f'\n\t{member}'

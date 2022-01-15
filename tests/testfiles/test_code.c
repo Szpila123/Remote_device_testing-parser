@@ -60,7 +60,8 @@ int main(int argc, char *argv[])
     bf.bitf3 = 0b101;
     bf.bitf4 = 0b01;
     printf("%d\n", *((int*) &bf));
-    printf("%p\n", my_pointer);
+    printf("%p\n", &my_pointer);
+    printf("%p\n", static_function);
 
     return 0;
 }
