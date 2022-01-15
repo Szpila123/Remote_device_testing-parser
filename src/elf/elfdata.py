@@ -15,7 +15,7 @@ from program.program_file import ProgramFile
 from program.program_type import ProgramType
 from program.program_function import ProgramFunction
 from program.program_variable import ProgramVariable
-from program.exceptions import LocalVariableError
+from program.exceptions import FuncitonAddressMissingError, LocalVariableError
 
 
 class ELFData(object):
@@ -101,9 +101,13 @@ class ELFData(object):
 
     def _create_functions(self, function_dies: list[DIE]) -> list[ProgramFunction]:
         """Get all functions defined in a given file."""
-        for die in function_dies:
-            print(die)
-        functions = list(ProgramFunction(die) for die in function_dies)
+        functions = []
+        for func_die in function_dies:
+            try:
+                functions.append(ProgramFunction(func_die))
+            except FuncitonAddressMissingError:
+                pass
+
         return functions
 
     def _get_cu_objects(self, cu: CompileUnit) -> dict[str, list[DIE]]:

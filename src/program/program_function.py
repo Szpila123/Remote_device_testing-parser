@@ -3,7 +3,7 @@ from collections import namedtuple
 from elftools.dwarf.die import DIE
 
 from program.program_abc import ProgramABC
-from program.exceptions import UnexpectedChildError
+from program.exceptions import FuncitonAddressMissingError, UnexpectedChildError
 
 
 class ProgramFunction(ProgramABC):
@@ -16,6 +16,9 @@ class ProgramFunction(ProgramABC):
         self.ref = self.get_die_attribute('DW_AT_type')
         self.args = self._parse_args()
         self.address = self.get_die_attribute('DW_AT_low_pc')
+
+        if self.address is None:
+            raise FuncitonAddressMissingError(f'Function {self.name} is external to cu of given DIE')
 
     def __str__(self) -> str:
         description = super().__str__()

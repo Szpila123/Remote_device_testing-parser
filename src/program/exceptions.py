@@ -17,5 +17,10 @@ class LocalVariableError(ParserException):
 
 
 class IncorrectLocationEncodingError(ParserException):
-    """Location information has incorrect format"""
+    """Error raised for location information that has incorrect format"""
+    pass
+
+
+class FuncitonAddressMissingError(ParserException):
+    """Error raised when function does not have an address (eg. is external for cu)"""
     pass
