@@ -19,9 +19,8 @@ class ProgramFile(object):
         self.objects_ref: dict[int, ProgramABC] = dict([(obj.offset, obj)
                                                        for obj in chain(types, variables, functions)])
 
-        for type in self.types:
-            print(type)
-            type.resolve_refs(self.objects_ref)
+        for obj in chain(self.types, self.variables, self.functions):
+            obj.resolve_refs(self.objects_ref)
 
     def __str__(self) -> str:
         return f'ProgramFile {self.name}'
@@ -34,6 +33,8 @@ class ProgramFile(object):
         """Returns code inserted to generated file"""
         code = GENERATED_FILE_IMPORTS
         code += self._get_code_types()
+        code += 'class Code(AbstractCode):\n'
+        code += '\t' + '\t'.join(self._get_code_variables().splitlines(keepends=True))
 
         return code
 
@@ -50,19 +51,18 @@ class ProgramFile(object):
         code += '\n'
 
         # Generate the rest of types in given file
-        for type in self.types:
-            if type not in done and all(map(lambda x: x in done, type.dependencies)):
-                code += type.generate_code()
-                code += '\n'
-                done.add(type)
+        while len(self.types) != len(done):
+            for type in self.types:
+                if type not in done and all(map(lambda x: x in done, type.dependencies)):
+                    code += type.generate_code()
+                    code += '\n'
+                    done.add(type)
 
         return code
 
-    def _get_code_typedefs(self) -> str:
-        """Generate code for typedefinitions"""
+    def _get_code_variables(self) -> str:
+        """Generate code for program variables"""
         code = ''
-        for type in self.types:
-            if type.get_class is ProgramTypeTypedef:
-                code += type.generate_code()
-
+        for var in self.variables:
+            code += f'self.{var.generate_code()}'
         return code

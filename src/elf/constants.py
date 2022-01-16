@@ -52,5 +52,4 @@ REFERENCE_FORM_WITH_OFFSET: tuple[str] = (
     'DW_FORM_ref8',
 )
 
-
 ENCODING = 'utf8'

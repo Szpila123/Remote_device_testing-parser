@@ -38,9 +38,9 @@ size_map: dict[int: Type] = {
     4: 'c_uint'
 }
 
-GENERATED_FILE_IMPORTS = """
-import ctypes
-import Enum, Pointer, Variable, Function
+GENERATED_FILE_IMPORTS = f"""
+from ctypes import {' '.join(types_map.values())}, Union, Structure
+import Enum, VoidPointer, Pointer, Variable, Function
 import Code
 
 """
