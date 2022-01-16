@@ -33,6 +33,9 @@ def create_args_parser() -> argparse.ArgumentParser:
                         type=pathlib.Path,
                         help='Save logs to given file',
                         action='store')
+    parser.add_argument('--print',
+                        help='Print code output instead of saving to file',
+                        action='store_true')
     parser.add_argument('-v',
                         '--verbose',
                         default=0,
@@ -69,7 +72,6 @@ def main() -> int:
     # Initialize logging module
     try:
         init_logging(args.log, args.verbose)
-
     except FileNotFoundError as error:
         logging.error(f' Error while trying to open logging file {error.filename} - {error.strerror}')
         return error.errno
@@ -79,6 +81,11 @@ def main() -> int:
     try:
         efile = elfdata.ELFData(args.elffile)
         program_files = efile.parse_elffile()
+        if args.print:
+            print(*(file.generate_code() for file in program_files))
+        else:
+            for file in program_files:
+                file.generate_file(args.dst)
 
     except OSError as error:
         logging.error(f' {error_prefix}: {error.filename} - {error.strerror}')

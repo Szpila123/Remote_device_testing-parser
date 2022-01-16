@@ -30,6 +30,7 @@ DIE_TYPE_TAGS: tuple[str] = (
     'DW_TAG_typedef',
     'DW_TAG_array_type',
     'DW_TAG_enumeration_type',
+    'DW_TAG_subroutine_type',
     *DIE_TYPE_COLLECTION_TAGS,
     *DIE_TYPE_MODIFIER_TAGS
 )
@@ -43,3 +44,13 @@ DIE_FUNCTION_TAGS: tuple[str] = (
 DIE_VARIABLE_TAGS: tuple[str] = (
     'DW_TAG_variable'
 )
+
+REFERENCE_FORM_WITH_OFFSET: tuple[str] = (
+    'DW_FORM_ref1',
+    'DW_FORM_ref2',
+    'DW_FORM_ref4',
+    'DW_FORM_ref8',
+)
+
+
+ENCODING = 'utf8'

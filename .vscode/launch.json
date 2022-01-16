@@ -7,7 +7,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/src/parser.py",
             "console": "integratedTerminal",
-            "args": ["${workspaceFolder}/tests/testfiles/test_code.elf", "-vv"]
+            "args": ["${workspaceFolder}/tests/testfiles/test_code.elf", "-vv", "--print"]
         },
         {
             "name": "Parser multi",
@@ -15,7 +15,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/src/parser.py",
             "console": "integratedTerminal",
-            "args": ["${workspaceFolder}/tests/testfiles/test_code_multi.elf", "-vv"]
+            "args": ["${workspaceFolder}/tests/testfiles/test_code_multi.elf", "-vv", "--print"]
         }
     ]
 }

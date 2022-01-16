@@ -80,7 +80,7 @@ class ELFData(object):
                 logging.info(object)
 
             # Create representations of object file/cu
-            parsed_files.append(ProgramFile(file_types, file_variables, file_functions))
+            parsed_files.append(ProgramFile(file_name, file_types, file_variables, file_functions))
 
         return parsed_files
 
@@ -95,7 +95,7 @@ class ELFData(object):
             try:
                 variables.append(ProgramVariable(var_die))
             except LocalVariableError:
-                pass
+                logging.debug(f'Variables: skipping {var_die}')
 
         return variables
 
@@ -106,7 +106,7 @@ class ELFData(object):
             try:
                 functions.append(ProgramFunction(func_die))
             except FuncitonAddressMissingError:
-                pass
+                logging.debug(f'Functions: skipping {func_die}')
 
         return functions
 

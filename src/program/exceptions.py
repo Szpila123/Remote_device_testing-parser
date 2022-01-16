@@ -24,3 +24,8 @@ class IncorrectLocationEncodingError(ParserException):
 class FuncitonAddressMissingError(ParserException):
     """Error raised when function does not have an address (eg. is external for cu)"""
     pass
+
+
+class NonResolvedReferenceError(ParserException):
+    """Error raised when object tries to generate code while not all references are resolved"""
+    pass
