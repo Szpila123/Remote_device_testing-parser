@@ -5,6 +5,11 @@ int external_function(int a)
     return a + 3;
 }
 
+int global_var;
+
+static int static_var;
+
+
 struct LocalStruct
 {
     int l1;

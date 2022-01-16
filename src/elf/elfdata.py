@@ -94,8 +94,9 @@ class ELFData(object):
         for var_die in variable_dies:
             try:
                 variables.append(ProgramVariable(var_die))
-            except LocalVariableError:
-                logging.debug(f'Variables: skipping {var_die}')
+            except LocalVariableError as error:
+                logging.debug(f'{error.args[0]}')
+                logging.debug(f'Variables: skipping {var_die}\t')
 
         return variables
 

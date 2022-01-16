@@ -1,6 +1,7 @@
 from typing import Optional
 
 from elftools.dwarf.die import DIE
+from elftools.dwarf.dwarf_expr import DW_OP_name2opcode
 
 from elf.constants import ENCODING
 
@@ -17,9 +18,6 @@ class ProgramVariable(ProgramABC):
         super().__init__(die)
         self.name = str(self.get_die_attribute('DW_AT_name'), ENCODING)
 
-        if not self.get_die_attribute('DW_AT_external'):
-            raise LocalVariableError(f'Variable {self.name}, offset {self.offset} is a local variable')
-
         self.reference = self.get_die_attribute('DW_AT_type')
         self.address = self._get_address()
         self._dependency = None
@@ -27,6 +25,9 @@ class ProgramVariable(ProgramABC):
     def _get_address(self) -> int:
         """Get variable's run-time address"""
         location = self.get_die_attribute('DW_AT_location')
+        if not self.get_die_attribute('DW_AT_external') and location[0] != DW_OP_name2opcode['DW_OP_addr']:
+            raise LocalVariableError(f'Variable {self.name}, offset {self.offset} is a local variable')
+
         return eval_dwarf_location(location)
 
     def __str__(self) -> str:
