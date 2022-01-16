@@ -26,6 +26,14 @@ class ProgramFunction(ProgramABC):
         description += self._get_args_str()
         return description
 
+    def generate_code(self) -> str:
+        """Gerenare code with definition of given function"""
+        return NotImplemented
+
+    def resolve_refs(self, obj_refs: dict[int, ProgramABC]) -> None:
+        """Resolve type reference of given function"""
+        return NotImplemented
+
     def _parse_args(self) -> list[Argument]:
         """Get all function arguments and their types"""
         args = []
