@@ -48,10 +48,6 @@ class ProgramType(ProgramABC):
             case _:
                 raise WrongDIEType(f'Creating ProgramType subclass instance with die of tag {die.tag}')
 
-    def get_class(self) -> 'ProgramType':
-        """Returns class of object"""
-        return self.__class__
-
     @abstractproperty
     def dependencies(self) -> Optional[list['ProgramType']]: ...
 
@@ -64,6 +60,7 @@ class ProgramTypeCollection(ProgramType):
     def __init__(self, die: DIE) -> None:
         super().__init__(die)
         self.alias: str = str(self.get_die_attribute('DW_AT_name'), ENCODING)
+        self.size = self.get_die_attribute('DW_AT_byte_size')
         self.members_refs = self._parse_members()
         self._dependencies = None
 
@@ -141,10 +138,10 @@ class ProgramTypeModifier(ProgramType):
         super().__init__(die)
         self.alias = None
         self.reference: int = self.get_die_attribute('DW_AT_type')
-        self.reference_size: int = self.get_die_attribute('DW_AT_byte_size')
+        self.size: int = self.get_die_attribute('DW_AT_byte_size')
         self._dependency = None
 
-        if self.reference_size is None and self.reference is None:
+        if self.size is None and self.reference is None:
             raise ModifierTypeWithNoReferenceError(f'DIE offset {self.offset} of {die.tag} has no reference')
 
     def resolve_refs(self, object_refs: dict[int, ProgramABC]) -> None:
@@ -152,6 +149,7 @@ class ProgramTypeModifier(ProgramType):
         if self.reference is not None:
             self._dependency = object_refs[self.reference]
             self.alias = self._dependency.alias
+            self.size = self._dependency.size
 
     @property
     def dependencies(self) -> list['ProgramType']:
@@ -184,29 +182,30 @@ class ProgramTypePointer(ProgramTypeModifier):
 
     def __init__(self, die: DIE) -> None:
         super().__init__(die)
-        if self.reference is None:
-            self.alias = 'VoidPointer'
-        else:
-            self.alias = None
+        self.alias = None
 
     def __str__(self) -> str:
         description = super().__str__()
-        return description + f'ProgramTypePointer to {self.reference}'
+        return description + f'ProgramTypePointer to size {self.ref_size}'
 
     def resolve_refs(self, object_refs: dict[int, ProgramABC]) -> None:
         """Resolve reference of type modifier"""
         if self.reference is not None:
             self._dependency = object_refs[self.reference]
-            self.alias = f'Pointer_{self._dependency.alias}'
+            self.refsize = self._dependency.size if self._dependency.size else self.size
+        else:
+            self.refsize = self.size
+
+        self.alias = f'PointerClass({self.refsize})'
 
     def generate_code(self) -> str:
         """Generate code for pointer type"""
-        if self.reference is None:
-            return ''
+        return ''
 
-        code = f'class {self.alias}(Pointer):\n'
-        code += f'\t_type = {self._dependency.alias}\n'
-        return code
+    @property
+    def dependencies(self) -> list['ProgramType']:
+        """Pointers have no dependencies"""
+        return []
 
 
 class ProgramTypeConst(ProgramTypeModifier):
@@ -355,27 +354,34 @@ class ProgramTypeTypedef(ProgramType):
         super().__init__(die)
         self.alias: str = str(self.get_die_attribute('DW_AT_name'), ENCODING)
         self.reference: int = self.get_die_attribute('DW_AT_type')
+        self.size: int = self.get_die_attribute('DW_AT_size')
         self._dependency: Optional[ProgramType] = None
 
     def __str__(self) -> str:
         description = super().__str__()
-        return description + f'ProgramTypeTypedef of {self.alias} to reference {self.reference}'
+        return description + f'ProgramTypeTypedef of {self.alias} to reference {self.reference or "Void"}'
 
     def resolve_refs(self, object_refs: dict[int, ProgramABC]) -> None:
         """Resolve reference for given type alias"""
-        self._dependency = object_refs[self.reference]
+        if self.reference is None:
+            self._dependency = []
+        else:
+            self._dependency = [object_refs[self.reference]]
 
     @property
     def dependencies(self) -> Optional[list['ProgramType']]:
-        """Return definition of given type alias"""
-        return [self._dependency] if self._dependency else None
+        """Return dependencies or none if dependencies to resolved """
+        return self._dependency
 
     def generate_code(self) -> str:
         """Generate type alias for given name"""
         if self._dependency is None:
             raise NonResolvedReferenceError(f'{self.alias} generates code with unresolved reference')
 
-        code = f'{self.alias} = {self._dependency.alias}\n'
+        if self._dependency == []:
+            code = f'{self.alias} = Void\n'
+        else:
+            code = f'{self.alias} = {self._dependency[0].alias}\n'
         return code
 
 
@@ -436,10 +442,11 @@ class ProgramTypeFunction(ProgramType):
 
     def __init__(self, die: DIE):
         super().__init__(die)
-        self.alias = None
-        self.reference = self.get_die_attribute('DW_AT_type')
-        self.arg_types = self._parse_arguments()
+        self.reference: int = self.get_die_attribute('DW_AT_type')
+        self.arg_types: list[self.ArgumentType] = self._parse_arguments()
+        self.size: int = self.get_die_attribute('DW_AT_byte_size')
         self._dependency = None
+        self.alias = None
 
     def __str__(self) -> str:
         description = super().__str__()
@@ -454,13 +461,16 @@ class ProgramTypeFunction(ProgramType):
 
     def resolve_refs(self, object_refs: dict[int, ProgramABC]) -> None:
         """Resolve dependencies of given funciton type"""
-        self._dependency = [object_refs[self.reference]] + [object_refs[arg.reference] for arg in self.arg_types]
+        self._dependency = []
+        if self.reference:
+            self._dependency += [object_refs[self.reference]]
+        self._dependency += [object_refs[arg.reference] for arg in self.arg_types]
         self.alias = f'FunctionType_{self.offset}'
 
     def generate_code(self) -> str:
         """Generate code of given function - create function type class"""
         code = f'class {self.alias}(FunctionType):\n'
-        code += f'\t_return_type = {self._dependency[0].alias}\n'
+        code += f'\t_return_type = {self._dependency[0].alias if self.reference else "Void"}\n'
         code += f'\t_args = [{", ".join(arg.alias for arg in self._dependency[1:])}]\n'
 
         return code

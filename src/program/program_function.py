@@ -55,7 +55,7 @@ class ProgramFunction(ProgramABC):
                 case 'DW_TAG_unspecified_parameters':
                     args.append(self.Argument(None, None))
 
-                case 'DW_TAG_variable':
+                case x if x in ('DW_TAG_variable', 'DW_TAG_label', 'DW_TAG_lexical_block'):
                     continue
 
                 case _:

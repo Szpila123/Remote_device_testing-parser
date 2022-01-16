@@ -1,3 +1,4 @@
+from calendar import c
 from itertools import chain
 from pathlib import Path
 from common.exceptions import FileWriteError
@@ -5,7 +6,7 @@ from program.generator.constants import GENERATED_FILE_IMPORTS
 
 from program.program_abc import ProgramABC
 from program.program_function import ProgramFunction
-from program.program_type import ProgramType, ProgramTypeBase, ProgramTypeEnum, ProgramTypeTypedef
+from program.program_type import ProgramType, ProgramTypeBase, ProgramTypeEnum, ProgramTypeFunction, ProgramTypePointer, ProgramTypeStructure, ProgramTypeTypedef, ProgramTypeUnion
 from program.program_variable import ProgramVariable
 
 
@@ -20,9 +21,7 @@ class ProgramFile(object):
         self.functions = functions
         self.objects_ref: dict[int, ProgramABC] = dict([(obj.offset, obj)
                                                        for obj in chain(types, variables, functions)])
-
-        for obj in chain(self.types, self.variables, self.functions):
-            obj.resolve_refs(self.objects_ref)
+        self._resolve_refs()
 
     def __str__(self) -> str:
         return f'ProgramFile {self.name}'
@@ -48,7 +47,7 @@ class ProgramFile(object):
         return code
 
     def _get_code_types(self) -> str:
-        """Generate code for program types"""
+        """Generate code for program types with proper declaration order"""
         code = ''
         done = set(type for type in self.types if type.get_class() is ProgramTypeBase)
 
@@ -63,8 +62,9 @@ class ProgramFile(object):
         while len(self.types) != len(done):
             for type in self.types:
                 if type not in done and all(map(lambda x: x in done, type.dependencies)):
-                    code += type.generate_code()
-                    code += '\n'
+                    generated = type.generate_code()
+                    if len(generated) > 0:
+                        code += generated + '\n'
                     done.add(type)
 
         return code
@@ -76,3 +76,13 @@ class ProgramFile(object):
     def _get_code_functions(self) -> str:
         """Generate code for program functions"""
         return ''.join(f'self.{func.generate_code()}' for func in self.functions)
+
+    def _resolve_refs(self) -> None:
+        """Resolve referencens with proper size propagation"""
+        for obj in chain(self.variables, self.functions, self.types):
+            if obj.get_class() is not ProgramTypePointer:
+                obj.resolve_refs(self.objects_ref)
+
+        for obj in self.types:
+            if obj.get_class() is ProgramTypePointer:
+                obj.resolve_refs(self.objects_ref)
