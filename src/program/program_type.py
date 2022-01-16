@@ -1,5 +1,4 @@
-from abc import abstractclassmethod, abstractproperty
-from ast import arg
+from abc import abstractproperty
 from collections import namedtuple
 from math import ceil
 from typing import Optional
@@ -129,7 +128,7 @@ class ProgramTypeCollection(ProgramType):
         code = f'\t_fields_ = [\n'
 
         for member, dep in zip(self.members_refs, self._dependencies):
-            code += f'\t\t({member.name}, {dep.alias}),\n'
+            code += f'\t\t("{member.name}", {dep.alias}),\n'
         code += f'\t]\n'
 
         return code

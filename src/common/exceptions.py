@@ -11,3 +11,8 @@ class WrongArgumentValueError(ParserException):
 class WrongDIEType(ParserException):
     """Exception raised when DIE is used to to create wrong object"""
     pass
+
+
+class FileWriteError(ParserException):
+    """Exception raised when data written to file is less then specified"""
+    pass

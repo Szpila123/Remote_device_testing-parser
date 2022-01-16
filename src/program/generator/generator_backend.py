@@ -1,4 +1,3 @@
-
 from abc import ABC, abstractmethod
 from ctypes import sizeof
 from typing import Any, Type
@@ -68,4 +67,8 @@ class VoidPointer(GeneratorFrontend):
 
 
 class Pointer(GeneratorFrontend):
+    pass
+
+
+class Enum(GeneratorFrontend):
     pass

@@ -1,11 +1,17 @@
 #!/usr/bin/python
+
 import sys
 import os
 import pathlib
 import logging
 import argparse
+import inspect
 
 import elf.elfdata as elfdata
+
+import program.generator.generator_backend as backend
+
+from common.exceptions import FileWriteError
 
 VERSION = '0.0.1'
 
@@ -76,7 +82,7 @@ def main() -> int:
         logging.error(f' Error while trying to open logging file {error.filename} - {error.strerror}')
         return error.errno
 
-    # Load and parse elf file
+    # Load and parse elf file, generate output
     error_prefix = 'Error while parsing elf file'
     try:
         efile = elfdata.ELFData(args.elffile)
@@ -84,8 +90,17 @@ def main() -> int:
         if args.print:
             print(*(file.generate_code() for file in program_files))
         else:
+            if not os.path.exists(args.dst):
+                os.makedirs(args.dst)
+
             for file in program_files:
                 file.generate_file(args.dst)
+
+            backend_code = inspect.getsource(backend)
+            with open(args.dst / 'backend.py', 'w') as file:
+                written = file.write(backend_code)
+                if written < len(backend_code):
+                    raise FileWriteError('Could not write backend code completly')
 
     except OSError as error:
         logging.error(f' {error_prefix}: {error.filename} - {error.strerror}')

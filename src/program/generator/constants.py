@@ -39,8 +39,7 @@ size_map: dict[int: Type] = {
 }
 
 GENERATED_FILE_IMPORTS = f"""
-from ctypes import {' '.join(types_map.values())}, Union, Structure
-import Enum, VoidPointer, Pointer, Variable, Function
-import Code
+from ctypes import {', '.join(types_map.values())}, Union, Structure
+from backend import Enum, VoidPointer, Pointer, Variable, Function, FunctionType
 
 """
