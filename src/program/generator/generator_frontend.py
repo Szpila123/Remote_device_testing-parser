@@ -59,6 +59,10 @@ class Function(GeneratorFrontend):
         pass
 
 
+class FunctionType(GeneratorFrontend):
+    pass
+
+
 class VoidPointer(GeneratorFrontend):
     pass
 

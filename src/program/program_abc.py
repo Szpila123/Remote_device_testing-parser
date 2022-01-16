@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod, abstractstaticmethod
+from abc import ABC, abstractmethod
 from typing import Any
 
 from elftools.dwarf.die import DIE
@@ -32,8 +32,8 @@ class ProgramABC(ABC):
 
         return value
 
-    # @abstractmethod
-    # def generate_code(self) -> str:...
+    @abstractmethod
+    def generate_code(self) -> str: ...
 
-    # @abstractmethod
-    # def resolve_refs(self, object_refs: dict[int, 'ProgramABC']) -> None: ...
+    @abstractmethod
+    def resolve_refs(self, object_refs: dict[int, 'ProgramABC']) -> None: ...

@@ -35,6 +35,8 @@ class ProgramFile(object):
         code += self._get_code_types()
         code += 'class Code(AbstractCode):\n'
         code += '\t' + '\t'.join(self._get_code_variables().splitlines(keepends=True))
+        code += '\n'
+        code += '\t' + '\t'.join(self._get_code_functions().splitlines(keepends=True))
 
         return code
 
@@ -62,7 +64,8 @@ class ProgramFile(object):
 
     def _get_code_variables(self) -> str:
         """Generate code for program variables"""
-        code = ''
-        for var in self.variables:
-            code += f'self.{var.generate_code()}'
-        return code
+        return ''.join(f'self.{var.generate_code()}' for var in self.variables)
+
+    def _get_code_functions(self) -> str:
+        """Generate code for program functions"""
+        return ''.join(f'self.{func.generate_code()}' for func in self.functions)

@@ -188,15 +188,26 @@ class ProgramTypePointer(ProgramTypeModifier):
         if self.reference is None:
             self.alias = 'VoidPointer'
         else:
-            self.alias = 'Pointer'
+            self.alias = None
 
     def __str__(self) -> str:
         description = super().__str__()
         return description + f'ProgramTypePointer to {self.reference}'
 
+    def resolve_refs(self, object_refs: dict[int, ProgramABC]) -> None:
+        """Resolve reference of type modifier"""
+        if self.reference is not None:
+            self._dependency = object_refs[self.reference]
+            self.alias = f'Pointer_{self._dependency.alias}'
+
     def generate_code(self) -> str:
         """Generate code for pointer type"""
-        return ''
+        if self.reference is None:
+            return ''
+
+        code = f'class {self.alias}(Pointer):\n'
+        code += f'\t_type = {self._dependency.alias}\n'
+        return code
 
 
 class ProgramTypeConst(ProgramTypeModifier):
