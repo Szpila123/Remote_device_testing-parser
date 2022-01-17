@@ -1,11 +1,15 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
 #define INTERFACE "org.example.TestsInterface"
+#define MESSAGE_SIZE 64
+
+static char buffer[64] = "Hello";
 
 GMainLoop *glibMain;
 const char *introspection =
@@ -21,19 +25,20 @@ const char *introspection =
     "  <interface name='org.example.TestsInterface'>\n"
     "    <property name='Version' type='s' access='read' />\n"
     "    <method name='Write' >\n"
-    "      <arg name='address' direction='in' type='i'/>\n"
-    "      <arg name='size' direction='in' type='s'/>\n"
-    "      <arg name='value' direction='in' type='s'/>\n"
+    "      <arg name='address' direction='in' type='t'/>\n"
+    "      <arg name='size' direction='in' type='t'/>\n"
+    "      <arg name='value' direction='in' type='ay'/>\n"
+    "      <arg type='s' direction='out' />\n"
     "    </method>\n"
     "    <method name='Read'>\n"
-    "      <arg name='address' direction='in' type='i'/>\n"
-    "      <arg name='size' direction='in' type='s'/>\n"
-    "      <arg type='s' direction='out' />\n"
+    "      <arg name='address' direction='in' type='t'/>\n"
+    "      <arg name='size' direction='in' type='t'/>\n"
+    "      <arg type='ay' direction='out' />\n"
     "    </method>\n"
     "    <method name='Execute'>\n"
-    "      <arg name='address' direction='in' type='i'/>\n"
-    "      <arg name='args' direction='in' type='s'/>\n"
-    "      <arg type='s' direction='out' />\n"
+    "      <arg name='address' direction='in' type='t'/>\n"
+    "      <arg name='args' direction='in' type='ay'/>\n"
+    "      <arg type='t' direction='out' />\n"
     "    </method>\n"
     "  </interface>\n"
 
@@ -56,28 +61,63 @@ DBusHandlerResult test_interface(DBusConnection *conn, DBusMessage *message, voi
     }
     else if (dbus_message_is_method_call(message, INTERFACE, "Write"))
     {
-        const char *pong = "Pong";
+        int64_t size, address;
+        char value[MESSAGE_SIZE];
+        char *pValue = value;
+
+        if (!dbus_message_get_args(message, &err, DBUS_TYPE_UINT64, &address,
+                                   DBUS_TYPE_UINT64, &size, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE,
+                                   &pValue, MESSAGE_SIZE, DBUS_TYPE_INVALID))
+            goto fail;
+
+        if (size > MESSAGE_SIZE)
+        {
+            size = MESSAGE_SIZE;
+        }
+        memcpy((void *)address, value, size);
 
         if (!(reply = dbus_message_new_method_return(message)))
             goto fail;
 
-        dbus_message_append_args(reply, DBUS_TYPE_STRING, &pong, DBUS_TYPE_INVALID);
+        dbus_message_append_args(reply, DBUS_TYPE_STRING, "OK", DBUS_TYPE_INVALID);
     }
     else if (dbus_message_is_method_call(message, INTERFACE, "Read"))
     {
-        const char *msg;
+        int64_t size, address;
+        char value[MESSAGE_SIZE];
+        char *pValue = value;
 
-        if (!dbus_message_get_args(message, &err, DBUS_TYPE_STRING, &msg, DBUS_TYPE_INVALID))
+        if (!dbus_message_get_args(message, &err, DBUS_TYPE_UINT64, &address,
+                                   DBUS_TYPE_UINT64, &size, DBUS_TYPE_INVALID))
             goto fail;
+
+        if (size > MESSAGE_SIZE)
+            size = MESSAGE_SIZE;
+
+        memcpy(value, (void *)address, size);
 
         if (!(reply = dbus_message_new_method_return(message)))
             goto fail;
 
-        dbus_message_append_args(reply, DBUS_TYPE_STRING, &msg, DBUS_TYPE_INVALID);
+        dbus_message_append_args(reply, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE, &pValue, size, DBUS_TYPE_INVALID);
     }
     else if (dbus_message_is_method_call(message, INTERFACE, "Execute"))
     {
+        int64_t address, retval;
+        char args[MESSAGE_SIZE];
+        char *pArgs = args;
 
+        if (!dbus_message_get_args(message, &err, DBUS_TYPE_UINT64, &address,
+                                   DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE, &pArgs, MESSAGE_SIZE, DBUS_TYPE_INVALID))
+            goto fail;
+
+        // Decode args and execute function
+        retval = 0;
+
+        if (!(reply = dbus_message_new_method_return(message)))
+            goto fail;
+
+        dbus_message_append_args(reply, DBUS_TYPE_INT64, &retval, DBUS_TYPE_INVALID);
     }
     else
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;

@@ -186,13 +186,17 @@ class ProgramTypePointer(ProgramTypeModifier):
 
     def __str__(self) -> str:
         description = super().__str__()
-        return description + f'ProgramTypePointer to size {self.ref_size}'
+        return description + f'ProgramTypePointer to offset {self.reference if self.reference else "Void"}'
 
     def resolve_refs(self, object_refs: dict[int, ProgramABC]) -> None:
         """Resolve reference of type modifier"""
         if self.reference is not None:
-            self._dependency = object_refs[self.reference]
-            self.refsize = self._dependency.size if self._dependency.size else self.size
+            try:
+                self._dependency = object_refs[self.reference]
+                self.refsize = self._dependency.size if self._dependency.size else self.size
+            except KeyError:  # Pointer to constat value
+                self.refsize = self.size
+                self.reference = None
         else:
             self.refsize = self.size
 
