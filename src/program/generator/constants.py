@@ -21,6 +21,7 @@ types_map: dict[str, Type] = {
     'long unsigned int': 'c_ulong',
     'long long': 'c_longlong',
     'long long int': 'c_longlong',
+    'long long unsigned int': 'c_longlong',
     '__int64': 'c_longlong',
     'unsigned long long': 'c_ulonglong',
     'unsigned long long int': 'c_ulonglong',
@@ -40,6 +41,6 @@ size_map: dict[int: Type] = {
 
 GENERATED_FILE_IMPORTS = f"""
 from ctypes import {', '.join(types_map.values())}, Union, Structure
-from backend import Enum, VoidPointer, Pointer, Variable, Function, FunctionType
+from backend import Enum, PointerClass, Variable, Function, FunctionType, Void
 
 """

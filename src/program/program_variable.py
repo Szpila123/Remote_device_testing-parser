@@ -25,7 +25,7 @@ class ProgramVariable(ProgramABC):
     def _get_address(self) -> int:
         """Get variable's run-time address"""
         location = self.get_die_attribute('DW_AT_location')
-        if not self.get_die_attribute('DW_AT_external') and location[0] != DW_OP_name2opcode['DW_OP_addr']:
+        if not location or location[0] != DW_OP_name2opcode['DW_OP_addr']:
             raise LocalVariableError(f'Variable {self.name}, offset {self.offset} is a local variable')
 
         return eval_dwarf_location(location)

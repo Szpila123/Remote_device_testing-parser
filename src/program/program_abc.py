@@ -10,6 +10,7 @@ class ProgramABC(ABC):
     """Abstract class for all Program objects classes"""
     die: DIE
     offset: int
+    Unnamed_count: int = 0
 
     def __init__(self, die: DIE) -> None:
         self.die = die
@@ -25,12 +26,20 @@ class ProgramABC(ABC):
         try:
             value = self.die.attributes[attr].value
         except KeyError:
-            return None
+            if attr == 'DW_AT_name':
+                value = bytes(f'Unnamed_type_{self.Unnamed_count}', 'utf8')
+                self.Unnamed_count += 1
+            else:
+                return None
 
         if attr == 'DW_AT_type' and self.die.attributes[attr].form in REFERENCE_FORM_WITH_OFFSET:
             value += self.die.cu.cu_offset
 
         return value
+
+    def get_class(self) -> 'ProgramABC':
+        """Returns class of object"""
+        return self.__class__
 
     @abstractmethod
     def generate_code(self) -> str: ...
