@@ -1,4 +1,3 @@
-from calendar import c
 from itertools import chain
 from pathlib import Path
 from common.exceptions import FileWriteError
