@@ -3,7 +3,7 @@ from typing import Any
 
 from elftools.dwarf.die import DIE
 
-from elf.constants import REFERENCE_FORM_WITH_OFFSET
+from elf.constants import ENCODING, REFERENCE_FORM_WITH_OFFSET
 
 
 class ProgramABC(ABC):
@@ -11,6 +11,7 @@ class ProgramABC(ABC):
     die: DIE
     offset: int
     Unnamed_count: int = 0
+    NORMALIZE_STRING = bytes('_normalize_', ENCODING)
 
     def __init__(self, die: DIE) -> None:
         self.die = die
@@ -27,10 +28,13 @@ class ProgramABC(ABC):
             value = self.die.attributes[attr].value
         except KeyError:
             if attr == 'DW_AT_name':
-                value = bytes(f'Unnamed_type_{self.Unnamed_count}', 'utf8')
-                self.Unnamed_count += 1
+                value = bytes(f'Unnamed_type_{ProgramABC.Unnamed_count}', ENCODING)
+                ProgramABC.Unnamed_count += 1
             else:
                 return None
+
+        if attr == 'DW_AT_name' and (value.startswith(b'__') or value.startswith(ProgramABC.NORMALIZE_STRING)):
+            value = ProgramABC.NORMALIZE_STRING + value
 
         if attr == 'DW_AT_type' and self.die.attributes[attr].form in REFERENCE_FORM_WITH_OFFSET:
             value += self.die.cu.cu_offset

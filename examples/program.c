@@ -9,7 +9,7 @@
 #define INTERFACE "org.example.TestsInterface"
 #define MESSAGE_SIZE 64
 
-static char buffer[64] = "Hello";
+static char buffer[32] = "Hello";
 
 GMainLoop *glibMain;
 const char *introspection =
@@ -61,25 +61,27 @@ DBusHandlerResult test_interface(DBusConnection *conn, DBusMessage *message, voi
     }
     else if (dbus_message_is_method_call(message, INTERFACE, "Write"))
     {
-        int64_t size, address;
-        char value[MESSAGE_SIZE];
-        char *pValue = value;
+        int64_t size, address, len = 64;
+        char *pValue;
+        const char* response_str = "OK";
 
         if (!dbus_message_get_args(message, &err, DBUS_TYPE_UINT64, &address,
                                    DBUS_TYPE_UINT64, &size, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE,
-                                   &pValue, MESSAGE_SIZE, DBUS_TYPE_INVALID))
+                                   &pValue, &len, DBUS_TYPE_INVALID))
             goto fail;
 
         if (size > MESSAGE_SIZE)
         {
             size = MESSAGE_SIZE;
         }
-        memcpy((void *)address, value, size);
+        printf("\tProgram Write: addr: %p, size: %d, len: %d\n", address, size, len);
+
+        memcpy((void *)address, pValue, size);
 
         if (!(reply = dbus_message_new_method_return(message)))
             goto fail;
 
-        dbus_message_append_args(reply, DBUS_TYPE_STRING, "OK", DBUS_TYPE_INVALID);
+        dbus_message_append_args(reply, DBUS_TYPE_STRING, &response_str, DBUS_TYPE_INVALID);
     }
     else if (dbus_message_is_method_call(message, INTERFACE, "Read"))
     {
@@ -93,7 +95,6 @@ DBusHandlerResult test_interface(DBusConnection *conn, DBusMessage *message, voi
 
         if (size > MESSAGE_SIZE)
             size = MESSAGE_SIZE;
-
         memcpy(value, (void *)address, size);
 
         if (!(reply = dbus_message_new_method_return(message)))
@@ -111,7 +112,7 @@ DBusHandlerResult test_interface(DBusConnection *conn, DBusMessage *message, voi
                                    DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE, &pArgs, MESSAGE_SIZE, DBUS_TYPE_INVALID))
             goto fail;
 
-        // Decode args and execute function
+        // Decode args and execute function - not part of example
         retval = 0;
 
         if (!(reply = dbus_message_new_method_return(message)))
@@ -154,22 +155,24 @@ int main(void)
     conn = dbus_bus_get(DBUS_BUS_SESSION, &err);
     if (!conn)
     {
-        fprintf(stderr, "DBus session fail %s\n", err.message);
+        printf("DBus session fail %s\n", err.message);
         goto fail;
     }
 
     ret = dbus_bus_request_name(conn, "org.example.Program", DBUS_NAME_FLAG_REPLACE_EXISTING, &err);
     if (ret != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER)
     {
-        fprintf(stderr, "Failed to request name on bus");
+        printf("Failed to request name on bus");
         goto fail;
     }
 
     if (!dbus_connection_register_object_path(conn, "/org/example/Program", &vtable, NULL))
     {
-        fprintf(stderr, "Failed to register object path");
+        printf("Failed to register object path");
         goto fail;
     }
+
+    printf("Buffer address: %p\n", buffer);
 
     glibMain = g_main_loop_new(NULL, false);
     dbus_connection_setup_with_g_main(conn, NULL);

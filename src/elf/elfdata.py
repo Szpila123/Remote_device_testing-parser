@@ -22,7 +22,7 @@ class ELFData(object):
     """Class used for accessing elffile data with high level interface.
 
     Keyword Arguemnts:
-        - file -- executable elf file from which data will be exctracted
+        - file_name -- executable elf file name from which data will be exctracted
     """
 
     def __init__(self, file_name: str):

@@ -47,6 +47,12 @@ def create_args_parser() -> argparse.ArgumentParser:
                         default=0,
                         help='Increase verbosity level of arguments',
                         action='count')
+    parser.add_argument('--withbackend',
+                        help='Include backend template in generated files',
+                        action='store_true')
+    parser.add_argument('--onlybackend',
+                        help='Generate only backend template',
+                        action='store_true')
     return parser
 
 
@@ -82,25 +88,53 @@ def main() -> int:
         logging.error(f' Error while trying to open logging file {error.filename} - {error.strerror}')
         return error.errno
 
+    # If generating only backend, generate/print it and exit
+    if args.onlybackend:
+        logging.info('Generate only backend code')
+        if args.print:
+            logging.info('Printing backend code')
+            print(inspect.getsource(backend))
+        else:
+            backend_code = inspect.getsource(backend)
+            with open(args.dst / 'backend.py', 'w') as file:
+                written = file.write(backend_code)
+                if written < len(backend_code):
+                    raise FileWriteError('Could not write backend code completly')
+        return os.EX_OK
+
     # Load and parse elf file, generate output
     error_prefix = 'Error while parsing elf file'
     try:
+        logging.info('Generating elffile')
         efile = elfdata.ELFData(args.elffile)
+
+        logging.info('Parsing elffile')
         program_files = efile.parse_elffile()
+
+        # Print only
         if args.print:
+            logging.info('Printing code')
             print(*(file.generate_code() for file in program_files))
+            if args.withbackend:
+                logging.info('Printing backend code')
+                print(inspect.getsource(backend))
+
+        # Generate files
         else:
+            logging.info(f'Generating code to {args.dst}')
             if not os.path.exists(args.dst):
                 os.makedirs(args.dst)
 
             for file in program_files:
                 file.generate_file(args.dst)
 
-            backend_code = inspect.getsource(backend)
-            with open(args.dst / 'backend.py', 'w') as file:
-                written = file.write(backend_code)
-                if written < len(backend_code):
-                    raise FileWriteError('Could not write backend code completly')
+            if args.withbackend:
+                logging.info('Adding backend code')
+                backend_code = inspect.getsource(backend)
+                with open(args.dst / 'backend.py', 'w') as file:
+                    written = file.write(backend_code)
+                    if written < len(backend_code):
+                        raise FileWriteError('Could not write backend code completly')
 
     except OSError as error:
         logging.error(f' {error_prefix}: {error.filename} - {error.strerror}')

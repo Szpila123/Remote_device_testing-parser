@@ -16,6 +16,14 @@
             "program": "${workspaceFolder}/src/parser.py",
             "console": "integratedTerminal",
             "args": ["${workspaceFolder}/tests/testfiles/test_code_multi.elf", "-vv", "--print"]
+        },
+        {
+            "name": "Example",
+            "type": "python",
+            "cwd": "${workspaceFolder}/examples/",
+            "request": "launch",
+            "program": "${workspaceFolder}/examples/test_framework.py",
+            "console": "integratedTerminal"
         }
     ]
 }

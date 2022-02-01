@@ -53,7 +53,7 @@ class ProgramFile(object):
         # Generate enums first, as they don't have dependencies
         for type in self.types:
             if type.get_class() is ProgramTypeEnum:
-                code += type.generate_code()
+                code += type.generate_code() + '\n'
                 done.add(type)
         code += '\n'
 

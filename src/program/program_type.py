@@ -434,7 +434,7 @@ class ProgramTypeArray(ProgramType):
     def resolve_refs(self, object_refs: dict[int, ProgramABC]) -> None:
         """Resolve array type dependency"""
         self._dependency = object_refs[self.reference]
-        self.alias = f'{self._dependency.alias}_array'
+        self.alias = f'{self._dependency.alias}_array_{self.count}'
 
     def generate_code(self) -> str:
         """Generate definition of given array type"""
